@@ -12,22 +12,45 @@
 
 #include "codexion.h"
 
-// TODO: free scheduler queue
-void	cleanup(t_data *data)
+static void	cleanup_dongles(t_data *data)
 {
 	unsigned int	i;
 
-	if (!data)
+	if (!data->dongles)
 		return ;
-	if (data->dongles)
+	i = 0;
+	while (i < data->number_of_coders)
 	{
-		i = 0;
-		while (i < data->number_of_coders)
-			pthread_mutex_destroy(&data->dongles[i++].mutex);
-		free(data->dongles);
-		data->dongles = NULL;
+		pthread_mutex_destroy(&data->dongles[i].mutex);
+		pthread_cond_destroy(&data->dongles[i].cond);
+		destroy_queue(&data->dongles[i].wait_queue);
+		i++;
+	}
+	free(data->dongles);
+	data->dongles = NULL;
+}
+
+static void	cleanup_mutexes(t_data *data)
+{
+	unsigned int	i;
+
+	i = 0;
+	while (i < data->number_of_coders)
+	{
+		pthread_mutex_destroy(&data->coders[i].mutex);
+		i++;
 	}
 	pthread_mutex_destroy(&data->log_mutex);
+	pthread_mutex_destroy(&data->simulation_mutex);
+	pthread_mutex_destroy(&data->counter_mutex);
+}
+
+void	cleanup(t_data *data)
+{
+	if (!data)
+		return ;
+	cleanup_dongles(data);
+	cleanup_mutexes(data);
 	if (data->coders)
 	{
 		free(data->coders);
