@@ -22,12 +22,33 @@
 
 // Init
 void			init_data(t_data *data);
+void			init_coders(t_data *data);
+void			init_dongles(t_data *data);
 
 // Parsing
 t_status		parse_args(int ac, char **av, t_data *data);
 
 // Logging
-void log_action(unsigned long time, unsigned int id, char *action);
+void			log_action(t_data *data, unsigned int id, char *action);
+int				is_running(t_data *data);
+
+// Threads
+void			*coder_routine(void *arg);
+void			*monitor_routine(void *arg);
+
+// Dongles
+void			acquire_dongles(t_coder *coder, t_data *data);
+void			release_dongles(t_coder *coder);
+
+// Scheduler / Queue
+void			init_queue(t_queue *q,
+					int (*cmp)(t_request, t_request));
+void			queue_push(t_queue *q, t_request req);
+t_request		queue_pop(t_queue *q);
+t_request		queue_peek(t_queue *q);
+void			destroy_queue(t_queue *q);
+int				cmp_fifo(t_request a, t_request b);
+int				cmp_edf(t_request a, t_request b);
 
 // Utils
 unsigned int	ft_atoui(const char *nptr);
@@ -37,6 +58,7 @@ size_t			ft_strlen(const char *s);
 int				error(const char *msg);
 int				ft_isnumber(const char *str);
 void			cleanup(t_data *data);
-unsigned long	get_time_ms();
+unsigned long	get_time_ms(void);
+void			ft_usleep(unsigned long ms, t_data *data);
 
 #endif // CODEXION_H
