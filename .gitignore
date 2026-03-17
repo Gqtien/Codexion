@@ -1,0 +1,5 @@
+dist/
+obj/
+codexion
+compile_commands.json
+.cache/
