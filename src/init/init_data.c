@@ -11,8 +11,6 @@
 /* ************************************************************************** */
 
 #include "codexion.h"
-#include "struct.h"
-#include <pthread.h>
 
 void	init_data(t_data *data)
 {

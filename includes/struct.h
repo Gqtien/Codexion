@@ -14,6 +14,7 @@
 # define STRUCT_H
 
 # include <pthread.h>
+# include <stdbool.h>
 
 typedef enum e_status
 {
@@ -42,6 +43,7 @@ typedef struct s_coder
 	t_dongle		*left;
 	t_dongle		*right;
 	pthread_t		thread;
+	pthread_mutex_t	mutex;
 }	t_coder;
 
 typedef struct s_data
@@ -57,6 +59,8 @@ typedef struct s_data
 	t_coder			*coders;
 	t_dongle		*dongles;
 	pthread_mutex_t	log_mutex;
+	pthread_mutex_t	simulation_mutex;
+	bool			running;
 }	t_data;
 
 #endif // STRUCT_H

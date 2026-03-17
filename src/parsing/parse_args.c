@@ -14,21 +14,24 @@
 
 t_status	parse_args(int ac, char **av, t_data *data)
 {
-	static int	i = 0;
+	int	i;
 
 	if (ac != 9)
 		return (FAIL);
+	i = 0;
 	while (i < 8)
 		if (!ft_isnumber(av[i++]))
 			return (FAIL);
-	data->number_of_coders = (unsigned int)ft_atoui(av[1]);
-	data->time_to_burnout = (unsigned int)ft_atoui(av[2]);
-	data->time_to_compile = (unsigned int)ft_atoui(av[3]);
-	data->time_to_debug = (unsigned int)ft_atoui(av[4]);
-	data->time_to_refactor = (unsigned int)ft_atoui(av[5]);
-	data->number_of_compiles_required = (unsigned int)ft_atoui(av[6]);
-	data->dongle_cooldown = (unsigned int)ft_atoui(av[7]);
-	data->scheduler = (t_scheduler)ft_atosch(av[8]);
+	*data = (t_data){
+		.number_of_coders = ft_atoui(av[1]),
+		.time_to_burnout = ft_atoui(av[2]),
+		.time_to_compile = ft_atoui(av[3]),
+		.time_to_debug = ft_atoui(av[4]),
+		.time_to_refactor = ft_atoui(av[5]),
+		.number_of_compiles_required = ft_atoui(av[6]),
+		.dongle_cooldown = ft_atoui(av[7]),
+		.scheduler = ft_atosch(av[8]),
+	};
 	if (data->number_of_coders == 0
 		|| data->time_to_burnout == 0
 		|| data->time_to_compile == 0

@@ -26,6 +26,9 @@ void			init_data(t_data *data);
 // Parsing
 t_status		parse_args(int ac, char **av, t_data *data);
 
+// Logging
+void log_action(unsigned long time, unsigned int id, char *action);
+
 // Utils
 unsigned int	ft_atoui(const char *nptr);
 t_scheduler		ft_atosch(const char *nptr);
@@ -34,5 +37,6 @@ size_t			ft_strlen(const char *s);
 int				error(const char *msg);
 int				ft_isnumber(const char *str);
 void			cleanup(t_data *data);
+unsigned long	get_time_ms();
 
 #endif // CODEXION_H
