@@ -1,37 +1,102 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   monitor.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: gviola-l <gviola-l@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/03/17 17:38:34 by gviola-l          #+#    #+#             */
+/*   Updated: 2026/03/17 17:38:35 by gviola-l         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "codexion.h"
 
-void monitor(t_data data)
+static void	broadcast_all(t_data *data)
 {
-    unsigned int i;
-    unsigned long now;
+	unsigned int	i;
 
-    while (1)
-    {
-    	pthread_mutex_lock(&data.simulation_mutex);
-    	if (data.running)
-    	{
-        	pthread_mutex_unlock(&data.simulation_mutex);
-        	break;
-    	}
-    	pthread_mutex_unlock(&data.simulation_mutex);
-    	i = 0;
-        while (i < data.number_of_coders)
-        {
-            pthread_mutex_lock(&data.coders[i].mutex);
-            now = get_time_ms();
-            if (now - data.coders[i].last_compile_ms > data.time_to_burnout)
-            {
-                pthread_mutex_lock(&data.log_mutex);
-                log_action(now, data.coders[i].id, "burned out");
-                pthread_mutex_unlock(&data.log_mutex);
-                pthread_mutex_lock(&data.simulation_mutex);
-                data.running = false;
-                pthread_mutex_unlock(&data.simulation_mutex);
-                pthread_mutex_unlock(&data.coders[i].mutex);
-                return ;
-            }
-            pthread_mutex_unlock(&data.coders[i].mutex);
-        }
-        usleep(1000);
-    }
+	i = 0;
+	while (i < data->number_of_coders)
+		pthread_cond_broadcast(&data->dongles[i++].cond);
+}
+
+static void	do_burnout(t_data *data, unsigned int idx, unsigned long now)
+{
+	pthread_mutex_lock(&data->log_mutex);
+	printf("%lu %u burned out\n",
+		now - data->start_time, data->coders[idx].id);
+	pthread_mutex_lock(&data->simulation_mutex);
+	data->running = false;
+	pthread_mutex_unlock(&data->simulation_mutex);
+	pthread_mutex_unlock(&data->log_mutex);
+	broadcast_all(data);
+}
+
+static void	check_burnout(t_data *data)
+{
+	unsigned int	i;
+	unsigned long	now;
+
+	i = 0;
+	while (i < data->number_of_coders)
+	{
+		pthread_mutex_lock(&data->coders[i].mutex);
+		if (data->coders[i].compiles_done
+			>= data->number_of_compiles_required)
+		{
+			pthread_mutex_unlock(&data->coders[i].mutex);
+			i++;
+			continue ;
+		}
+		now = get_time_ms();
+		if (now - data->coders[i].last_compile_ms
+			>= data->time_to_burnout)
+		{
+			pthread_mutex_unlock(&data->coders[i].mutex);
+			do_burnout(data, i, now);
+			return ;
+		}
+		pthread_mutex_unlock(&data->coders[i].mutex);
+		i++;
+	}
+}
+
+static void	check_all_done(t_data *data)
+{
+	unsigned int	i;
+
+	i = 0;
+	while (i < data->number_of_coders)
+	{
+		pthread_mutex_lock(&data->coders[i].mutex);
+		if (data->coders[i].compiles_done
+			< data->number_of_compiles_required)
+		{
+			pthread_mutex_unlock(&data->coders[i].mutex);
+			return ;
+		}
+		pthread_mutex_unlock(&data->coders[i].mutex);
+		i++;
+	}
+	pthread_mutex_lock(&data->simulation_mutex);
+	data->running = false;
+	pthread_mutex_unlock(&data->simulation_mutex);
+	broadcast_all(data);
+}
+
+void	*monitor_routine(void *arg)
+{
+	t_data	*data;
+
+	data = (t_data *)arg;
+	while (is_running(data))
+	{
+		check_burnout(data);
+		if (!is_running(data))
+			break ;
+		check_all_done(data);
+		usleep(1000);
+	}
+	return (NULL);
 }
