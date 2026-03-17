@@ -18,7 +18,7 @@ t_status	parse_args(int ac, char **av, t_data *data)
 
 	if (ac != 9)
 		return (FAIL);
-	i = 0;
+	i = 1;
 	while (i < 8)
 		if (!ft_isnumber(av[i++]))
 			return (FAIL);
