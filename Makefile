@@ -22,7 +22,7 @@ SRCS		= \
 				dongles/acquire_dongle.c \
 				dongles/release_dongle.c \
 				queue/queue.c \
-				queue/compare.c \
+				queue/scheduler.c \
 				utils/log.c \
 				utils/error.c \
 				utils/atoui.c \
