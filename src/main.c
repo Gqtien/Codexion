@@ -22,7 +22,7 @@ int	is_running(t_data *data)
 	return (running);
 }
 
-static void	wake_all(t_data *data)
+void	wake_all(t_data *data)
 {
 	unsigned int	i;
 
@@ -38,19 +38,13 @@ static void	start_simulation(t_data *data)
 	data->start_time = get_time_ms();
 	i = 0;
 	while (i < data->number_of_coders)
-	{
-		data->coders[i].last_compile_ms = data->start_time;
-		i++;
-	}
+		data->coders[i++].last_compile_ms = data->start_time;
 	data->running = true;
 	pthread_create(&data->monitor_thread, NULL, monitor_routine, data);
 	i = 0;
-	while (i < data->number_of_coders)
-	{
-		pthread_create(&data->coders[i].thread, NULL,
-			coder_routine, &data->coders[i]);
-		i++;
-	}
+	while (i++ < data->number_of_coders)
+		pthread_create(&data->coders[i - 1].thread, NULL, coder_routine,
+			&data->coders[i - 1]);
 	pthread_join(data->monitor_thread, NULL);
 	wake_all(data);
 	i = 0;
@@ -62,8 +56,7 @@ int	main(int argc, char **argv)
 {
 	t_data	data;
 
-	if (parse_args(argc, argv, &data) == FAIL)
-		error("Parsing failed.");
+	parse_args(argc, argv, &data);
 	init_data(&data);
 	start_simulation(&data);
 	cleanup(&data);

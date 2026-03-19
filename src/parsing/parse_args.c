@@ -12,16 +12,16 @@
 
 #include "codexion.h"
 
-t_status	parse_args(int ac, char **av, t_data *data)
+void	parse_args(int ac, char **av, t_data *data)
 {
 	int	i;
 
 	if (ac != 9)
-		return (FAIL);
+		error("Invalid argument count. Expected 8 arguments.");
 	i = 1;
 	while (i < 8)
 		if (!ft_isnumber(av[i++]))
-			return (FAIL);
+			error("All first 7 arguments must be positive integers.");
 	*data = (t_data){
 		.number_of_coders = ft_atoui(av[1]),
 		.time_to_burnout = ft_atoui(av[2]),
@@ -32,11 +32,11 @@ t_status	parse_args(int ac, char **av, t_data *data)
 		.dongle_cooldown = ft_atoui(av[7]),
 		.scheduler = ft_atosch(av[8]),
 	};
-	if (data->number_of_coders == 0
-		|| data->time_to_burnout == 0
-		|| data->time_to_compile == 0
-		|| data->time_to_debug == 0
-		|| data->time_to_refactor == 0)
-		return (FAIL);
-	return (SUCCESS);
+	if (!data->number_of_coders
+		|| !data->time_to_burnout
+		|| !data->time_to_compile
+		|| !data->time_to_debug
+		|| !data->time_to_refactor)
+		error("number_of_coders, time_to_burnout, time_to_compile, "
+			"time_to_debug and time_to_refactor must be greater than 0.");
 }
