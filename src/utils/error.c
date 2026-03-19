@@ -15,7 +15,10 @@
 int	error(const char *msg)
 {
 	if (msg)
+	{
+		write(STDERR_FILENO, "Error: ", 7);
 		write(STDERR_FILENO, msg, ft_strlen(msg));
+	}
 	write(STDERR_FILENO, "\n", 1);
 	exit(EXIT_FAILURE);
 }

@@ -26,21 +26,22 @@ void			init_coders(t_data *data);
 void			init_dongles(t_data *data);
 
 // Parsing
-t_status		parse_args(int ac, char **av, t_data *data);
+void			parse_args(int ac, char **av, t_data *data);
 
 // Logging
 void			log_action(t_data *data, unsigned int id, char *action);
-int				is_running(t_data *data);
 
 // Threads
 void			*coder_routine(void *arg);
 void			*monitor_routine(void *arg);
+void			wake_all(t_data *data);
+int				is_running(t_data *data);
 
 // Dongles
 void			acquire_dongles(t_coder *coder, t_data *data);
 void			release_dongles(t_coder *coder);
 
-// Scheduler / Queue
+// Queue
 void			init_queue(t_queue *q,
 					int (*cmp)(t_request, t_request));
 void			queue_push(t_queue *q, t_request req);

@@ -18,7 +18,7 @@ void	init_coders(t_data *data)
 
 	data->coders = malloc(sizeof(t_coder) * data->number_of_coders);
 	if (!data->coders)
-		error("Allocation failed.");
+		error("Coders allocation failed.");
 	i = 0;
 	while (i < data->number_of_coders)
 	{

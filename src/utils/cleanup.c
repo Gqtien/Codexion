@@ -36,10 +36,7 @@ static void	cleanup_mutexes(t_data *data)
 
 	i = 0;
 	while (i < data->number_of_coders)
-	{
-		pthread_mutex_destroy(&data->coders[i].mutex);
-		i++;
-	}
+		pthread_mutex_destroy(&data->coders[i++].mutex);
 	pthread_mutex_destroy(&data->log_mutex);
 	pthread_mutex_destroy(&data->simulation_mutex);
 	pthread_mutex_destroy(&data->counter_mutex);

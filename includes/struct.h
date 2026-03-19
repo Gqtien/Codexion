@@ -16,12 +16,6 @@
 # include <pthread.h>
 # include <stdbool.h>
 
-typedef enum e_status
-{
-	SUCCESS,
-	FAIL,
-}	t_status;
-
 typedef enum e_scheduler
 {
 	FIFO,

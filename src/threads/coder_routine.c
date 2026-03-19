@@ -12,11 +12,11 @@
 
 #include "codexion.h"
 
-static t_status	compile_cycle(t_coder *coder, t_data *data)
+static int	compile_cycle(t_coder *coder, t_data *data)
 {
 	acquire_dongles(coder, data);
 	if (!is_running(data))
-		return (FAIL);
+		return (0);
 	pthread_mutex_lock(&coder->mutex);
 	coder->last_compile_ms = get_time_ms();
 	pthread_mutex_unlock(&coder->mutex);
@@ -26,7 +26,7 @@ static t_status	compile_cycle(t_coder *coder, t_data *data)
 	pthread_mutex_lock(&coder->mutex);
 	coder->compiles_done++;
 	pthread_mutex_unlock(&coder->mutex);
-	return (SUCCESS);
+	return (1);
 }
 
 void	*coder_routine(void *arg)
@@ -39,7 +39,7 @@ void	*coder_routine(void *arg)
 	while (is_running(data)
 		&& coder->compiles_done < data->number_of_compiles_required)
 	{
-		if (compile_cycle(coder, data) == FAIL)
+		if (!compile_cycle(coder, data))
 			break ;
 		if (!is_running(data))
 			break ;

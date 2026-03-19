@@ -12,16 +12,7 @@
 
 #include "codexion.h"
 
-static void	broadcast_all(t_data *data)
-{
-	unsigned int	i;
-
-	i = 0;
-	while (i < data->number_of_coders)
-		pthread_cond_broadcast(&data->dongles[i++].cond);
-}
-
-static void	do_burnout(t_data *data, unsigned int idx, unsigned long now)
+static void	handle_burnout(t_data *data, unsigned int idx, unsigned long now)
 {
 	pthread_mutex_lock(&data->log_mutex);
 	printf("%lu %u burned out\n",
@@ -30,7 +21,7 @@ static void	do_burnout(t_data *data, unsigned int idx, unsigned long now)
 	data->running = false;
 	pthread_mutex_unlock(&data->simulation_mutex);
 	pthread_mutex_unlock(&data->log_mutex);
-	broadcast_all(data);
+	wake_all(data);
 }
 
 static void	check_burnout(t_data *data)
@@ -42,19 +33,16 @@ static void	check_burnout(t_data *data)
 	while (i < data->number_of_coders)
 	{
 		pthread_mutex_lock(&data->coders[i].mutex);
-		if (data->coders[i].compiles_done
-			>= data->number_of_compiles_required)
+		if (data->coders[i].compiles_done >= data->number_of_compiles_required)
 		{
-			pthread_mutex_unlock(&data->coders[i].mutex);
-			i++;
+			pthread_mutex_unlock(&data->coders[i++].mutex);
 			continue ;
 		}
 		now = get_time_ms();
-		if (now - data->coders[i].last_compile_ms
-			>= data->time_to_burnout)
+		if (now - data->coders[i].last_compile_ms >= data->time_to_burnout)
 		{
 			pthread_mutex_unlock(&data->coders[i].mutex);
-			do_burnout(data, i, now);
+			handle_burnout(data, i, now);
 			return ;
 		}
 		pthread_mutex_unlock(&data->coders[i].mutex);
@@ -70,8 +58,7 @@ static void	check_all_done(t_data *data)
 	while (i < data->number_of_coders)
 	{
 		pthread_mutex_lock(&data->coders[i].mutex);
-		if (data->coders[i].compiles_done
-			< data->number_of_compiles_required)
+		if (data->coders[i].compiles_done < data->number_of_compiles_required)
 		{
 			pthread_mutex_unlock(&data->coders[i].mutex);
 			return ;
@@ -82,7 +69,7 @@ static void	check_all_done(t_data *data)
 	pthread_mutex_lock(&data->simulation_mutex);
 	data->running = false;
 	pthread_mutex_unlock(&data->simulation_mutex);
-	broadcast_all(data);
+	wake_all(data);
 }
 
 void	*monitor_routine(void *arg)

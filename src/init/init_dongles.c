@@ -19,7 +19,7 @@ void	init_dongles(t_data *data)
 
 	data->dongles = malloc(sizeof(t_dongle) * data->number_of_coders);
 	if (!data->dongles)
-		error("Allocation failed.");
+		error("Dongles allocation failed.");
 	if (data->scheduler == FIFO)
 		cmp = cmp_fifo;
 	else
