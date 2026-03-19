@@ -15,7 +15,7 @@
 static void	release_dongle(t_dongle *dongle)
 {
 	pthread_mutex_lock(&dongle->mutex);
-	dongle->available = 1;
+	dongle->available = true;
 	dongle->last_release_ms = get_time_ms();
 	pthread_cond_broadcast(&dongle->cond);
 	pthread_mutex_unlock(&dongle->mutex);

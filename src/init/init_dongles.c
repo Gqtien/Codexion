@@ -29,7 +29,7 @@ void	init_dongles(t_data *data)
 	{
 		pthread_mutex_init(&data->dongles[i].mutex, NULL);
 		pthread_cond_init(&data->dongles[i].cond, NULL);
-		data->dongles[i].available = 1;
+		data->dongles[i].available = true;
 		data->dongles[i].last_release_ms = 0;
 		init_queue(&data->dongles[i].wait_queue, cmp);
 		i++;

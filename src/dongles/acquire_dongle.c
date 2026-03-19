@@ -53,7 +53,7 @@ static void	acquire_dongle(t_coder *coder, t_data *data, t_dongle *dongle)
 	if (is_running(data))
 	{
 		queue_pop(&dongle->wait_queue);
-		dongle->available = 0;
+		dongle->available = false;
 	}
 	pthread_mutex_unlock(&dongle->mutex);
 }
