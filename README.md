@@ -1,6 +1,6 @@
 *This project has been created as part of the 42 curriculum by gviola-l.*
 
-# Codexion
+![Codexion](assets/banner.png)
 
 ## Table of Contents
 - [Description](#description)
