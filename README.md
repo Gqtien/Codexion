@@ -28,7 +28,7 @@ Build with the provided Makefile. The project compiles with -Wall -Wextra -Werro
 make
 
 # run the program (example)
-./codexion 5 800 200 200 200 3 100 fifo
+./codexion 4 1500 200 200 200 3 100 fifo
 ```
 
 ---
@@ -37,19 +37,19 @@ make
 
 All arguments are mandatory and must be positive integers except `scheduler` which must be `fifo` or `edf`.
 
-1. number_of_coders | number of coders
-2. time_to_burnout (ms) | deadline: if a coder does not start compiling before this window since their last compile or simulation start, they burn out
+1. number_of_coders -> number of coders
+2. time_to_burnout (ms) -> deadline: if a coder does not start compiling before this window since their last compile or simulation start, they burn out
 3. time_to_compile (ms)
 4. time_to_debug (ms)
 5. time_to_refactor (ms)
-6. number_of_compiles_required | simulation ends when every coder reached this compile count
-7. dongle_cooldown (ms) | after a dongle is released it is unavailable for this cooldown
-8. scheduler | `fifo` (First In, First Out) or `edf` (Earliest Deadline First)
+6. number_of_compiles_required -> simulation ends when every coder reached this compile count
+7. dongle_cooldown (ms) -> after a dongle is released it is unavailable for this cooldown
+8. scheduler -> `fifo` (First In, First Out) or `edf` (Earliest Deadline First)
 
 Example:
 
 ```bash
-./codexion 4 1000 200 200 200 5 100 edf
+./codexion 4 1500 200 200 200 5 100 edf
 ```
 
 ---
@@ -77,5 +77,27 @@ e.g:
 
 ### AI usage
 
-- Drafting and polishing this README and usage examples.
-- Identifiying edge-case failures.
+- Identifying edge-case failures.
+- Drafting and polishing this README.
+
+---
+
+## `🛡️` Blocking cases handled
+
+- **Deadlock prevention** — dongles are always acquired in a fixed global order (`get_dongle_order`), eliminating circular waits (Coffman's conditions)
+- **Starvation prevention** — each request records an `arrival_order` and a `deadline`, the scheduler (FIFO or EDF) services coders deterministically so none is indefinitely bypassed
+- **Cooldown handling** — after release, each dongle enforces a configurable `dongle_cooldown` via `last_release_ms` before it can be re-acquired
+- **Burnout detection** — a dedicated monitor thread periodically reads each coder's `last_compile_ms` and triggers a clean shutdown if `time_to_burnout` is exceeded
+- **Log serialization** — all output is serialized under `log_mutex`, preventing interleaved lines and inconsistent timestamps
+
+---
+
+## `🔧` Thread synchronization mechanisms
+
+- **`pthread_mutex_t`** — per-object mutexes protect all shared fields:
+  - `coder->mutex` guards `last_compile_ms` and `compiles_done`; the monitor locks this same mutex when reading, preventing torn reads
+  - `dongle->mutex` guards `available`, `last_release_ms`, and the `wait_queue`
+  - `log_mutex`, `simulation_mutex`, `counter_mutex` protect logging, the `running` flag, and the global request counter respectively
+- **`pthread_cond_t`** — coders enqueue a request then block on `dongle->cond`; on release, `pthread_cond_broadcast` wakes all waiters so the scheduler picks the next owner — no busy-waiting
+- **Wait queue** — each dongle holds a queue of `{coder_id, deadline, arrival_order}` records consulted under `dongle->mutex`, making scheduling decisions race-free
+- **Shutdown coordination** — the monitor sets `running = false` under `simulation_mutex` then calls `wake_all()` (broadcasts every dongle's cond), so blocked coders wake, re-check `is_running()`, and exit cleanly
