@@ -28,7 +28,12 @@ void	wake_all(t_data *data)
 
 	i = 0;
 	while (i < data->number_of_coders)
-		pthread_cond_broadcast(&data->dongles[i++].cond);
+	{
+		pthread_mutex_lock(&data->dongles[i].mutex);
+		pthread_cond_broadcast(&data->dongles[i].cond);
+		pthread_mutex_unlock(&data->dongles[i].mutex);
+		i++;
+	}
 }
 
 static void	start_simulation(t_data *data)
