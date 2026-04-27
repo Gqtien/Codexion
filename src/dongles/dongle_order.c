@@ -1,28 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   release_dongle.c                                   :+:      :+:    :+:   */
+/*   dongle_order.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: gviola-l <gviola-l@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/17 17:38:42 by gviola-l          #+#    #+#             */
-/*   Updated: 2026/04/17 08:11:21 by gviola-l         ###   ########.fr       */
+/*   Created: 2026/04/17 08:20:41 by gviola-l          #+#    #+#             */
+/*   Updated: 2026/04/17 08:20:45 by gviola-l         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-static void	release_dongle(t_dongle *dongle)
+void	get_dongle_order(t_coder *coder, t_dongle **first, t_dongle **second)
 {
-	pthread_mutex_lock(&dongle->mutex);
-	dongle->available = true;
-	dongle->last_release_ms = get_time_ms();
-	pthread_cond_broadcast(&dongle->cond);
-	pthread_mutex_unlock(&dongle->mutex);
-}
-
-void	release_dongles(t_coder *coder)
-{
-	release_dongle(coder->left);
-	release_dongle(coder->right);
+	if (coder->left_idx <= coder->right_idx)
+	{
+		*first = coder->left;
+		*second = coder->right;
+	}
+	else
+	{
+		*first = coder->right;
+		*second = coder->left;
+	}
 }

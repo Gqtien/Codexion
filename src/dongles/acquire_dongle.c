@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   dongle_acquire.c                                   :+:      :+:    :+:   */
+/*   acquire_dongle.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: gviola-l <gviola-l@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/17 17:38:40 by gviola-l          #+#    #+#             */
-/*   Updated: 2026/03/17 17:38:41 by gviola-l         ###   ########.fr       */
+/*   Updated: 2026/04/17 08:09:12 by gviola-l         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,23 @@ static int	cooldown_ok(t_dongle *dongle, t_data *data)
 	return (0);
 }
 
+static void	wait_cooldown(t_dongle *dongle, t_data *data)
+{
+	struct timeval	tv;
+	struct timespec	ts;
+	unsigned long	elapsed;
+	unsigned long	remaining;
+
+	elapsed = get_time_ms() - dongle->last_release_ms;
+	if (elapsed >= data->dongle_cooldown)
+		return ;
+	remaining = data->dongle_cooldown - elapsed;
+	gettimeofday(&tv, NULL);
+	ts.tv_sec = tv.tv_sec + (tv.tv_usec / 1000 + remaining) / 1000;
+	ts.tv_nsec = ((tv.tv_usec / 1000 + remaining) % 1000) * 1000000;
+	pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &ts);
+}
+
 static void	acquire_dongle(t_coder *coder, t_data *data, t_dongle *dongle)
 {
 	t_request	req;
@@ -46,30 +63,20 @@ static void	acquire_dongle(t_coder *coder, t_data *data, t_dongle *dongle)
 	pthread_mutex_unlock(&data->counter_mutex);
 	pthread_mutex_lock(&dongle->mutex);
 	queue_push(&dongle->wait_queue, req);
-	while (is_running(data) && !can_take(dongle, coder->id))
-		pthread_cond_wait(&dongle->cond, &dongle->mutex);
-	while (is_running(data) && !cooldown_ok(dongle, data))
-		usleep(200);
+	while (is_running(data)
+		&& (!can_take(dongle, coder->id) || !cooldown_ok(dongle, data)))
+	{
+		if (can_take(dongle, coder->id))
+			wait_cooldown(dongle, data);
+		else
+			pthread_cond_wait(&dongle->cond, &dongle->mutex);
+	}
 	if (is_running(data))
 	{
 		queue_pop(&dongle->wait_queue);
 		dongle->available = false;
 	}
 	pthread_mutex_unlock(&dongle->mutex);
-}
-
-void	get_dongle_order(t_coder *coder, t_dongle **first, t_dongle **second)
-{
-	if (coder->left_idx <= coder->right_idx)
-	{
-		*first = coder->left;
-		*second = coder->right;
-	}
-	else
-	{
-		*first = coder->right;
-		*second = coder->left;
-	}
 }
 
 void	acquire_dongles(t_coder *coder, t_data *data)

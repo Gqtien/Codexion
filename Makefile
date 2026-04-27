@@ -20,6 +20,7 @@ SRCS		= \
 				threads/coder_routine.c \
 				threads/monitor.c \
 				dongles/acquire_dongle.c \
+				dongles/dongle_order.c \
 				dongles/release_dongle.c \
 				queue/queue.c \
 				queue/scheduler.c \

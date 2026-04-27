@@ -36,6 +36,7 @@ int				is_running(t_data *data);
 
 // Dongles
 void			acquire_dongles(t_coder *coder, t_data *data);
+void			get_dongle_order(t_coder *c, t_dongle **f, t_dongle **s);
 void			release_dongles(t_coder *coder);
 
 // Scheduler
