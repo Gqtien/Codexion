@@ -27,5 +27,5 @@ int	cmp_edf(t_request a, t_request b)
 		return (-1);
 	if (a.deadline > b.deadline)
 		return (1);
-	return (0);
+	return (cmp_fifo(a, b));
 }
