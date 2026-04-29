@@ -84,11 +84,25 @@ e.g:
 
 ## `🛡️` Blocking cases handled
 
-- **Deadlock prevention** — dongles are always acquired in a fixed global order (`get_dongle_order`), eliminating circular waits (Coffman's conditions)
-- **Starvation prevention** — each request records an `arrival_order` and a `deadline`, the scheduler (FIFO or EDF) services coders deterministically so none is indefinitely bypassed
-- **Cooldown handling** — after release, each dongle enforces a configurable `dongle_cooldown` via `last_release_ms` before it can be re-acquired
-- **Burnout detection** — a dedicated monitor thread periodically reads each coder's `last_compile_ms` and triggers a clean shutdown if `time_to_burnout` is exceeded
-- **Log serialization** — all output is serialized under `log_mutex`, preventing interleaved lines and inconsistent timestamps
+### Deadlock prevention
+
+A deadlock requires all four **Coffman conditions** to hold simultaneously:
+
+| # | Condition         | Meaning                                                          |
+|---|-------------------|------------------------------------------------------------------|
+| 1 | Mutual exclusion  | A resource can only be held by one thread at a time              |
+| 2 | Hold and wait     | A thread holds a resource while waiting for another              |
+| 3 | No preemption     | Resources cannot be forcibly taken from a thread                 |
+| 4 | Circular wait     | A cycle of threads exists, each waiting on the next              |
+
+Here we break **circular wait**: dongles are always acquired in a fixed global order (lowest index first, see `src/dongles/dongle_order.c.c`), so no cycle of waits can form.
+
+### Other concurrency hazards
+
+- **Starvation prevention** — each request records an `arrival_order` and a `deadline`; the scheduler (FIFO or EDF) services coders deterministically so none is indefinitely bypassed.
+- **Cooldown handling** — after release, each dongle enforces a configurable `dongle_cooldown` via `last_release_ms` before it can be re-acquired.
+- **Burnout detection** — a dedicated monitor thread periodically reads each coder's `last_compile_ms` and triggers a clean shutdown if `time_to_burnout` is exceeded.
+- **Log serialization** — all output is serialized under `log_mutex`, preventing interleaved lines and inconsistent timestamps.
 
 ---
 
