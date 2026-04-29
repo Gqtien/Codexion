@@ -95,7 +95,7 @@ A deadlock requires all four **Coffman conditions** to hold simultaneously:
 | 3 | No preemption     | Resources cannot be forcibly taken from a thread                 |
 | 4 | Circular wait     | A cycle of threads exists, each waiting on the next              |
 
-Here we break **circular wait**: dongles are always acquired in a fixed global order (lowest index first, see `src/dongles/dongle_order.c.c`), so no cycle of waits can form.
+Here we break **circular wait**: dongles are always acquired in a fixed global order (lowest index first, see `src/dongles/dongle_order.c`), so no cycle of waits can form.
 
 ### Other concurrency hazards
 
